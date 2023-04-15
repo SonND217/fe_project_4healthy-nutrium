@@ -1,125 +1,91 @@
-import { createContext, useReducer, useEffect } from "react";
-import { authReducer } from "../reducers/AuthReducer";
-import { apiUrl, LOCAL_STORAGE_TOKEN_NAME } from "./UrlAPI";
 import axios from "axios";
-import setAuthToken from "../utils/setAuthToken";
-import jwt from "jwt-decode";
+import axiosInstance from "./CustomAxios";
+import normalAxios from "./NormalAxios";
+import { apiUrl } from "./UrlAPI";
 
-export const AuthContext = createContext();
-
-const UserAPI = ({ children }) => {
-  const [authState, dispatch] = useReducer(authReducer, {
-    authLoading: false,
-    isAuthenticated: false,
-    userName: null,
-    UserRole: null,
-  });
-
-  // Authenticate user
-  // const loadUser = async () => {
-  //   if (localStorage[LOCAL_STORAGE_TOKEN_NAME]) {
-  //     setAuthToken(localStorage[LOCAL_STORAGE_TOKEN_NAME]);
-  //   }
-  // };
-
-  // useEffect(() => loadUser(), []);
-
-  // Login
-  const loginUser = (userForm) => {
-    try {
-      var querystring = require("querystring");
-      axios
-        .post(`${apiUrl}/login`, querystring.stringify(userForm), {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-        })
-        .then(function (response) {
-          const user = jwt(response.data.access_token);
-          if (response.data.access_token != null) {
-            if (user.role === "ADMIN") {
-              localStorage.setItem(
-                LOCAL_STORAGE_TOKEN_NAME,
-                response.data.access_token
-              );
-              dispatch({
-                type: "SET_AUTH_ADMIN",
-                payload: {
-                  isAuthenticated: true,
-                  userName: user.sub,
-                },
-              });
-              console.log("Account ADMIN");
-            } else if (user.role === "USER") {
-              localStorage.setItem(
-                LOCAL_STORAGE_TOKEN_NAME,
-                response.data.access_token
-              );
-              dispatch({
-                type: "SET_AUTH_USER",
-                payload: {
-                  isAuthenticated: true,
-                  userName: user.sub,
-                },
-              });
-              console.log("Account USER");
-            } else {
-              localStorage.setItem(
-                LOCAL_STORAGE_TOKEN_NAME,
-                response.data.access_token
-              );
-              dispatch({
-                type: "SET_AUTH_NUTRIENT_EXPERT",
-                payload: {
-                  isAuthenticated: true,
-                  userName: user.sub,
-                },
-              });
-              console.log("Account NUTRIENT_EXPERT");
-            }
-          }
-          console.log(response);
-        });
-    } catch (error) {}
-  };
-
-  // Register
-  const registerUser = async (userForm) => {
-    try {
-      const response = await axios.post(`${apiUrl}/auth/register`, userForm);
-      if (response.data.success)
-        localStorage.setItem(
-          LOCAL_STORAGE_TOKEN_NAME,
-          response.data.accessToken
-        );
-
-      // await loadUser();
-
-      return response.data;
-    } catch (error) {
-      if (error.response.data) return error.response.data;
-      else return { success: false, message: error.message };
-    }
-  };
-
-  // Logout
-  const logoutUser = () => {
-    localStorage.removeItem(LOCAL_STORAGE_TOKEN_NAME);
-    dispatch({
-      type: "SET_AUTH",
-      payload: { isAuthenticated: false, userName: null },
+const UserAPI = {
+  login(userForm) {
+    const querystring = require("querystring");
+    return axios.post(`${apiUrl}/login`, querystring.stringify(userForm), {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
     });
-  };
+  },
+  getAll() {
+    const url = `/user`;
+    return axiosInstance.get(url);
+  },
 
-  // Context data
-  const authContextData = { loginUser, registerUser, logoutUser, authState };
+  getByEmail(email) {
+    const url = `/user/` + email;
+    return normalAxios.get(url);
+  },
 
-  // Return provider
-  return (
-    <AuthContext.Provider value={authContextData}>
-      {children}
-    </AuthContext.Provider>
-  );
+  getRegisterUser(code) {
+    const url = `/user/email-register/` + code;
+    return normalAxios.get(url);
+  },
+
+  getForgotUser(code) {
+    const url = `/user/forgot/` + code;
+    return normalAxios.get(url);
+  },
+
+  getSearched(key) {
+    const url = `/user/search/` + key;
+    return axiosInstance.get(url);
+  },
+
+  sendRegisterCode(email) {
+    const url = `/user/email-register`;
+    return normalAxios.post(url, email);
+  },
+
+  sendForgotCode(email) {
+    const url = `/user/forgot`;
+    return normalAxios.post(url, email);
+  },
+
+  addUser(user) {
+    const url = `/user`;
+    return normalAxios.post(url, user);
+  },
+
+  addNutrientExpert(user) {
+    const url = `/user//nutrient-expert`;
+    return axiosInstance.post(url, user);
+  },
+
+  updateUser(user) {
+    const url = `/user/`+ user.id;
+    return axiosInstance.post(url, user);
+  },
+
+  checkOldPassword(id,oldPassword) {
+    const url = `/user/check-old-password/` + id;
+    return axiosInstance.post(url, oldPassword);
+  },
+
+  addNutrient(user) {
+    const url = `/user/nutrient-expert`;
+    return axiosInstance.post(url, user);
+  },
+
+  update(user) {
+    const url = `/user/` + user.id;
+    return axiosInstance.put(url, user);
+  },
+
+  deactive(uid) {
+    const url = `/user/` + uid+ `/delete`;
+    return axiosInstance.post(url);
+  },
+
+  active(uid) {
+    const url = `/user/` + uid + `/active`;
+    return axiosInstance.post(url);
+  },
+
 };
-
 export default UserAPI;

@@ -1,10 +1,12 @@
 import React from "react";
-import LoginForm from "../components/auth/LoginForm";
-import RegisterForm from "../components/auth/RegisterForm";
-import { AuthContext } from "../service/Actions/UserAPI";
+import LoginForm from "../components/form/LoginForm";
+import RegisterForm from "../components/form/RegisterForm";
+import { AuthContext } from "../service/Actions/AuthAPI";
 import { useContext } from "react";
 import { Redirect } from "react-router-dom";
 import Spinner from "react-bootstrap/Spinner";
+import SendMailForm from "../components/form/SendMailForm";
+import ResetPasswordForm from "../components/form/ResetPasswordForm";
 
 const Auth = ({ authRoute }) => {
   const {
@@ -19,19 +21,19 @@ const Auth = ({ authRoute }) => {
         <Spinner animation="border" variant="info" />
       </div>
     );
-  } else if (isAuthenticated) {
-    if (UserRole === "ADMIN") {
-      return <Redirect to="/admin" />;
-    } else if (UserRole === "USER") {
-      return <Redirect to="/home" />;
-    } else {
-      return <Redirect to="/nutrionexpert" />;
-    }
+  } else if (isAuthenticated && UserRole === "ADMIN") {
+    return <Redirect to="/admin/dashboard" />;
+  } else if (isAuthenticated && UserRole === "USER") {
+    return <Redirect to="/homeuser" />;
+  } else if (isAuthenticated && UserRole === "NUTRIENT_EXPERT") {
+    return <Redirect to="/nutrionexpert/information" />;
   } else {
     body = (
       <>
         {authRoute === "login" && <LoginForm />}
         {authRoute === "register" && <RegisterForm />}
+        {authRoute === "sendmail" && <SendMailForm />}
+        {authRoute === "resetpassword" && <ResetPasswordForm />}
       </>
     );
   }
